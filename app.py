@@ -107,13 +107,13 @@ def footprint(sizes, x, colors):
 def depth_view(sizes, x, colors):
     """Side view: each size drawn to scale as depth x height, with how many panels need its depth."""
     fig = go.Figure()
-    gap, x0 = 6, 0
+    gap, x0 = 10, 0
     for name, s in sizes.iterrows():
         c = colors[name]
         fig.add_shape(type="rect", x0=x0, y0=0, x1=x0 + s.D, y1=s.H, line=dict(color=c, width=3),
                       fillcolor=hex_rgba(c, 0.25))
         fig.add_annotation(x=x0 + s.D / 2, y=s.H + 2, yanchor="bottom", showarrow=False,
-                           text=f"<b>{name}</b><br><b>{fmt(s.D)}\"</b>", font=dict(size=15, color=c))
+                           text=f"<b>{name}</b><br><b>{fmt(s.D)}\"</b>", font=dict(size=13, color=c))
         x0 += s.D + gap
     fig.add_shape(type="line", x0=-2, x1=x0 - gap + 2, y0=0, y1=0, line=dict(color="#8a8984", width=2))
     fig.update_layout(**LAYOUT, height=620)
@@ -124,7 +124,7 @@ def depth_view(sizes, x, colors):
 
 
 def chart_row(sizes, x, colors):
-    c1, c2 = st.columns([5, 1], gap="medium")
+    c1, c2 = st.columns([4, 1], gap="medium")
     with c1:
         footprint(sizes, x, colors)
     with c2:
@@ -144,6 +144,8 @@ s4, x4, st4 = assign(FOUR)
 n = st3["n"]
 
 st.title("Panelboard Enclosure Sizes")
+st.success("**Every size here is a standard Siemens box.** Size A = Siemens **B50**, Size B = **B74**, the power box = "
+           "**PB890** / **PBD890**, and the optional P3 box = **24WD80**. Details at the bottom of the page.")
 
 # ---------------------------------------------------------------- 3 sizes
 st.header("Recommended: 3 sizes")
@@ -176,3 +178,39 @@ st.markdown(
     f"don't change. The P3 box is 7.75\" deep, Siemens' standard P3 depth. The power box (D) is still built to the "
     f"largest Siemens P5 (★), with the same 14.5\" vs. 12.75\" depth choice. The trade-off is one more box to "
     f"stock, draw and build, for about {c4['C'] / n:.0%} of panels.")
+
+# ---------------------------------------------------------------- Siemens' own boxes
+st.divider()
+st.header("Siemens' standard boxes")
+st.markdown("Each of our sizes is the same as a box in Siemens' catalog (SpeedFax Section 11), so Siemens interiors and "
+            "fronts are made to fit them.")
+SIEMENS_BOXES = [
+    ("A", "#2a78d6", "50\" × 20\" × 5.75\"", "P1 / P2", "B50", "S50B surface · F50B flush"),
+    ("B", "#eb6834", "74\" × 20\" × 5.75\"", "P1 / P2 (largest P1/P2 box)", "B74 · or B74FLR universal box",
+     "S74B surface · F74B flush"),
+    ("Power box", "#1baf7a", "90\" × 38\" × 12.75\" or 14.5\"", "P5 (and 32\" Skinny P5, which replaced P4)",
+     "PB890 (12.75\" deep) · PBD890 (14.5\" deep)", "P590 trims · F890 flush kit"),
+    ("P3 box (4-size option)", "#eda100", "80\" × 24\" × 7.75\"", "P3", "24WD80 (moving to 24BD series)",
+     "P3S80 surface · P3F80 flush"),
+]
+rows = "".join(
+    f"<tr><td><span style='display:inline-block;width:12px;height:12px;border-radius:3px;background:{c};"
+    f"margin-right:8px'></span><b>{name}</b></td><td style='white-space:nowrap'>{dims}</td><td>{interior}</td><td><b>{box}</b></td><td>{front}</td></tr>"
+    for name, c, dims, interior, box, front in SIEMENS_BOXES)
+st.markdown(
+    "<style>table.sb{width:100%;border-collapse:collapse;font-size:.98rem}"
+    "table.sb th{text-align:left;opacity:.7;font-weight:600;padding:6px 10px;border-bottom:1px solid rgba(128,128,128,.4)}"
+    "table.sb td{padding:9px 10px;border-bottom:1px solid rgba(128,128,128,.18)}</style>"
+    "<table class='sb'><thead><tr><th>Our size</th><th>H × W × D</th><th>Siemens interior</th>"
+    f"<th>Siemens box catalog #</th><th>Siemens front</th></tr></thead><tbody>{rows}</tbody></table>",
+    unsafe_allow_html=True)
+st.markdown(
+    "- **Siemens dimensions are inside dimensions.** For P1/P2 boxes, add 5/8\" to the width and 1/8\" to the height "
+    "for the outside size (B50 is about 20⅝\" × 50⅛\" outside). Building to Siemens' inside sizes keeps their "
+    "interiors and fronts a drop-in fit.\n"
+    "- **Power box depth:** Siemens' standard P5 box is 12.75\" deep. Their 14.5\" box (PBD890) is needed for the "
+    "biggest 1200A boards and for Siemens' one-piece door-in-door front.\n"
+    "- **Other Siemens heights in each family:**\n"
+    "  - P1/P2: B26–B74, every 6\"\n"
+    "  - P3: 56\", 68\", 80\" (62\" and 74\" are make-to-order), plus 30\"-wide vented boxes for big mains\n"
+    "  - P5: 60\", 75\", 90\"")
